@@ -1,13 +1,14 @@
 import { Lexer, Parser, getDefaults } from './vendor/marked/marked.esm.js';
 
-const INLINE_TEXT_FAST_PATH = /[\\<\[!`*_~@&]/;
 const options = getDefaults();
-const lexer = new class extends Lexer {
+const plainTextPattern = /[\\<\[!`*_~@&]/;
+
+class FastLexer extends Lexer {
   inlineTokens(src, tokens = []) {
-    if (!INLINE_TEXT_FAST_PATH.test(src) &&
-        !src.includes('www.') &&
-        !src.includes('://') &&
-        !src.includes('  \n')) {
+    if (!plainTextPattern.test(src)
+      && !src.includes('www.')
+      && !src.includes('://')
+      && !src.includes('  \n')) {
       tokens.push({
         type: 'text',
         raw: src,
@@ -18,7 +19,9 @@ const lexer = new class extends Lexer {
     }
     return super.inlineTokens(src, tokens);
   }
-}(options);
+}
+
+const lexer = new FastLexer(options);
 const parser = new Parser(options);
 
 export function parse(markdown) {
